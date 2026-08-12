@@ -23,7 +23,7 @@ public final class Task {
     public Task(@JsonProperty("id") int id, @JsonProperty("description") String description) {
         validateTask(id, description);
         this.id = id;
-        this.description = description.trim();
+        this.description = description.strip();
     }
 
     public int getId() {
