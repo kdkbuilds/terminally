@@ -1,95 +1,81 @@
 package org.kdkbuilds;
 
-import org.kdkbuilds.repository.TodoManager;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
+import org.kdkbuilds.cli.TerminalCli;
+import org.kdkbuilds.cli.colors.AnsiConsoleRenderer;
+import org.kdkbuilds.cli.colors.ConsoleRenderer;
+import org.kdkbuilds.cli.colors.RgbConsoleRenderer;
+import org.kdkbuilds.config.AppConfig;
+import org.kdkbuilds.config.AppDataDirectory;
+import org.kdkbuilds.model.User;
+import org.kdkbuilds.persistence.JsonTaskStore;
+import org.kdkbuilds.service.TaskService;
 
-import java.util.InputMismatchException;
-import java.util.Scanner;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
 
 public class Main {
 
-    private static final TodoManager todoManager = new TodoManager();
-    private static final Scanner scanner = new Scanner(System.in);
+    private static final Path APP_DATA_DIRECTORY;
+    private static final Path APP_DATA_FILE_PATH;
+    private static final String APP_DATA_FILE_NAME;
+    private static final User USER;
+    private static final JsonTaskStore JSON_TASK_STORE;
+    private static final TaskService TASK_SERVICE;
 
-    private static void add() {
-        System.out.print("Task: ");
-        String task = scanner.nextLine();
-        todoManager.add(task.trim());
+    // for terminal
+    private final static Terminal TERMINAL;
+    private final static LineReader READER;
+    private static final ConsoleRenderer CONSOLE_RENDERER;
+    private static final TerminalCli TERMINAL_CLI;
+
+    private static final AppConfig APP_CONFIG;
+
+    static {
+        // paramount to the application
+        try {
+            APP_DATA_DIRECTORY = AppDataDirectory.create();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize data store for the application. You most probably can't run this app :(");
+        }
+        APP_CONFIG = new AppConfig();
+        APP_DATA_FILE_NAME = APP_CONFIG.getFileName();
+        APP_DATA_FILE_PATH = APP_DATA_DIRECTORY.resolve(APP_DATA_FILE_NAME);
+
+        USER = new User("", new ArrayList<>());
+        TASK_SERVICE = new TaskService();
+        JSON_TASK_STORE = new JsonTaskStore(APP_DATA_FILE_PATH, APP_CONFIG, TASK_SERVICE, USER);
     }
 
-    private static void displayAll() {
-        todoManager.display();
+    // for terminal ops
+    static {
+        try {
+            TERMINAL = TerminalBuilder.builder().system(true).build();
+            READER = LineReaderBuilder.builder().terminal(TERMINAL).build();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to build terminal");
+        }
+        CONSOLE_RENDERER = initConsoleRenderer();
+        TERMINAL_CLI = new TerminalCli(TERMINAL, READER, CONSOLE_RENDERER, APP_CONFIG, TASK_SERVICE, JSON_TASK_STORE);
     }
 
-    private static void displayByID() {
-        System.out.print("\nEnter Task ID: ");
-        String input = scanner.nextLine();
+    private static ConsoleRenderer initConsoleRenderer() {
+        if (APP_CONFIG.getColorProfile().equals("rgb")) {
+            return new RgbConsoleRenderer();
+        }
 
-        int id = Integer.parseInt(input.trim());
-        todoManager.display(id);
-    }
-
-    private static void update() {
-        System.out.print("\nEnter Task ID: ");
-        String input = scanner.nextLine();
-
-        int id = Integer.parseInt(input.trim());
-        System.out.print("Enter Updated Description: ");
-        String task = scanner.nextLine();
-
-        todoManager.update(task, id);
-    }
-
-    private static void delete() {
-        System.out.print("\nEnter Task ID: ");
-        String input = scanner.nextLine();
-
-        int id = Integer.parseInt(input.trim());
-        todoManager.delete(id);
+        return new AnsiConsoleRenderer();
     }
 
     private static void run() {
-        System.out.println("------------TERMINALLY------------");
-
-        boolean runApp = true;
-        while (runApp) {
-            System.out.println("\n1.Add   2.Display All   3.Display by ID   4.Update   5.Delete   6.Terminate");
-            int input = -1;
-            try {
-                String userInput = scanner.nextLine();
-                input = Integer.parseInt(userInput.trim());
-            } catch (NumberFormatException e) {
-                System.out.println("Unexpected token received. Please try again.\n");
-                continue;
-            }
-
-            if (input >= 1 && input <= 6) {
-                switch (input) {
-                    case 1:
-                        add();
-                        break;
-                    case 2:
-                        displayAll();
-                        break;
-                    case 3:
-                        displayByID();
-                        break;
-                    case 4:
-                        update();
-                        break;
-                    case 5:
-                        delete();
-                        break;
-                    case 6:
-                        runApp = false;
-                        break;
-                }
-            } else {
-                System.out.println("Only enter integers between [1, 6]. Please try again.\n");
-            }
-        }
+        TERMINAL_CLI.configureWorkspace();
+        TERMINAL_CLI.beginSession();
     }
 
-    // Independent Run for DEBUG
     public static void main(String[] args) {
         run();
     }
