@@ -30,6 +30,10 @@ public final class Task {
         return id;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
     @Override
     public String toString() {
         return id + " : " + description;
