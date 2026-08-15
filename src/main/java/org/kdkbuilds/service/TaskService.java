@@ -1,6 +1,5 @@
 package org.kdkbuilds.service;
 
-import org.kdkbuilds.exceptions.IdNotFoundException;
 import org.kdkbuilds.model.Task;
 
 import java.util.ArrayList;
@@ -8,11 +7,11 @@ import java.util.List;
 
 public final class TaskService {
 
-    private final List<Task> tasks;
+    private List<Task> tasks;
     private int maxId;
 
-    public TaskService(List<Task> tasks) {
-        this.tasks = new ArrayList<>(tasks);
+    public TaskService() {
+        this.tasks = new ArrayList<>();
         setMaxID();
     }
 
@@ -29,7 +28,7 @@ public final class TaskService {
         maxId = max;
     }
 
-    private int getTaskIndex(int id) {
+    public int getTaskIndex(int id) {
         for (int i = 0; i < tasks.size(); i++) {
             if (tasks.get(i).getId() == id) {
                 return i;
@@ -40,6 +39,11 @@ public final class TaskService {
 
     public List<Task> getAllTasks() {
         return List.copyOf(tasks);
+    }
+
+    public void setTasks(List<Task> tasks) {
+        this.tasks = tasks;
+        setMaxID();
     }
 
     public Task add(String description) {
@@ -53,11 +57,11 @@ public final class TaskService {
         return tasks.removeIf(task -> task.getId() == id);
     }
 
-    public void update(int id, String updatedDescription) throws IdNotFoundException{
-        int index = getTaskIndex(id);
-        if (index == -1) {
-            throw new IdNotFoundException("Provided ID does not match any existing task");
-        }
-        tasks.set(index, new Task(id, updatedDescription));
+    public void update(int id, int taskIndex, String updatedDescription) {
+        tasks.set(taskIndex, new Task(id, updatedDescription));
+    }
+
+    public void clear() {
+        tasks.clear();
     }
 }

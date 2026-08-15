@@ -49,6 +49,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 ```java
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -60,9 +61,10 @@ public class Client {
         File file = new File("path/to/file");
         ObjectMapper mapper = new ObjectMapper();
         List<Task> tasks = new ArrayList<>();
-        
+
         try {
             if (file.createNewFile()) {
+                mapper.enable(SerializationFeature.INDENT_OUTPUT);
                 mapper.writeValue(file, tasks);
             }
         } catch (Exception e) {
@@ -72,6 +74,30 @@ public class Client {
 }
 ```
 Now, the JSON object created will use key `user_display_name` instead of `name`
+
+### Custom Indentation
+Jackson's `mapper.enable(SerializationFeature.INDENT_OUTPUT)` provides only two white spaces for each indent by default. <br>
+If you want a roomier feel, and want custom indentation, here is how to implement it.
+
+```java
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+DefaultIndenter indenter = new DefaultIndenter("    ", "\n"); // custom white spacing 
+
+DefaultPrettyPrinter printer = new DefaultPrettyPrinter();
+printer.
+
+indentObjectsWith(indenter);
+printer.
+
+indentArraysWith(indenter);
+
+// While serializing
+ObjectMapper mapper = new ObjectMapper();
+mapper.writer(printer).writeValue(file, object);
+```
 
 ## De-serialization: Converting JSON into POJO's
 

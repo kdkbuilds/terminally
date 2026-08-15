@@ -1,13 +1,13 @@
 package org.kdkbuilds.cli.colors;
 
-public class RgbStatus extends BaseStatus{
+public class RgbConsoleRenderer extends ConsoleRenderer {
 
     private final String TEXT;
     private final String MUTED;
     private final String PURPLE;
     private final String PEACH;
 
-    public RgbStatus() {
+    public RgbConsoleRenderer() {
         // parents
         RED     = rgb(243, 139, 168);
         BLUE    = rgb(137, 180, 250);
@@ -27,27 +27,27 @@ public class RgbStatus extends BaseStatus{
     }
 
     @Override
-    public void info(String text) {
-        paint(CYAN, text);
+    public String developer(String text) {
+        return render(CYAN, text);
     }
 
     @Override
-    public void warning(String text) {
-        paint(YELLOW, text);
+    public String user(String text) {
+        return render(YELLOW, text);
     }
 
     @Override
-    public void success(String text) {
-        paint(GREEN, text);
+    public String success(String text) {
+        return render(GREEN, text);
     }
 
     @Override
-    public void accent(String text) {
-        paint(BLUE, text);
+    public String accent(String text) {
+        return render(BLUE, text);
     }
 
     @Override
-    public void error(String text) {
-        paint(RED, text);
+    public String error(String text) {
+        return render(RED, text);
     }
 }
